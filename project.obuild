@@ -1,0 +1,11 @@
+name: dirclean
+version: 0.0.1
+description:
+  dirclean - clean your directories.
+licence: GPL
+authors: Jake Faulkner <jakefaulkn@gmail.com>
+obuild-ver: 1
+homepage: https://www.github.com/Triagle/dirclean
+executable dirclean
+  main-is: main.ml
+  src-dir: src
