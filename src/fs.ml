@@ -1,5 +1,7 @@
 (* Filesystem helper functions *)
+open Unix;;
 open Pcre;;
+open Inotify;;
 
 (* List all files in a directory *)
 let list_all = function
@@ -16,3 +18,10 @@ let fs_glob path rx =
   match list_all path with
   | Ok files -> Ok (List.filter (Pcre.pmatch ~rex: rx) files)
   | Error e -> Error e (* Quirk of the ocaml type system. *)
+
+(* Match an event against a regular expression, e.g only created files matching *\.zip$ *)
+let event_match rx (_, _, _, path) = Pcre.pmatch ~rex: rx path
+
+(* Get age of file *)
+let age_of file =
+  (Unix.stat file).st_mtime
