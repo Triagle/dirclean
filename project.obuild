@@ -9,4 +9,4 @@ homepage: https://www.github.com/Triagle/dirclean
 executable dirclean
   main-is: main.ml
   src-dir: src
-  build-deps: angstrom, pcre
+  build-deps: angstrom, pcre, lwt, inotify

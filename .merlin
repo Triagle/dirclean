@@ -1,2 +1,2 @@
 S src/**
-PKG angstrom pcre
+PKG angstrom pcre lwt inotify
