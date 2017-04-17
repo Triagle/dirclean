@@ -59,9 +59,9 @@ let array_of p = char '[' *> sep_by (whitespace (char ',')) p <* char ']'
 
 let value = fix (fun value ->
     let arr = array_of value in
-    choice [string_value; num_value; regexp_value; bool_value; time_value; arr])
+    choice [string_value; time_value; num_value; regexp_value; bool_value;  arr])
 
-let key = take_while1 (fun x -> x != ' ' && x != '=')
+let key = take_while1 (fun x -> x != ' ' && x != '=' && x != '[' && x != ']' )
 
 let kv_pair = lift2 (fun key value -> (key, value)) (key <* (whitespace (char '='))) value
 
