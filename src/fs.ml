@@ -14,13 +14,10 @@ let list_all = function
     Error (path ^ " is not a directory")
 
 (* Search for a file in path by regex rx *)
-let fs_glob path rx =
+let fs_glob path f =
   match list_all path with
-  | Ok files -> Ok (List.filter (Pcre.pmatch ~rex: rx) files)
+  | Ok files -> Ok (List.filter f files)
   | Error e -> Error e (* Quirk of the ocaml type system. *)
-
-(* Match an event against a regular expression, e.g only created files matching *\.zip$ *)
-let event_match rx (_, _, _, path) = Pcre.pmatch ~rex: rx path
 
 (* Get age of file *)
 let age_of file =
