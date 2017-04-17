@@ -1,6 +1,8 @@
 (* Rules contain selectors and actions to carry out *)
+open Lwt;;
 open Pcre;;
 open Ini;;
+open Fs;;
 type action_result =
   | Success
   | Error
@@ -37,7 +39,7 @@ module Rule = struct
     | ("move_to", String folder)::xs -> rule_of_ini path {base_rule with action = (movement_action folder)} xs
     | ("delete", Bool true)::xs -> rule_of_ini path {base_rule with action = delete_action} xs
     | ("watch", Bool true)::xs -> rule_of_ini path {base_rule with watch = true} xs
-    | ("poll", Int poll)::xs -> rule_of_ini path {base_rule with poll = Some poll} xs
+    | ("poll", Time poll)::xs -> rule_of_ini path {base_rule with poll = Some poll} xs
     | kv::xs -> Result.Error kv
     | [] -> Result.Ok {base_rule with path = path}
 end
