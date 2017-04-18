@@ -40,7 +40,9 @@ let create_path path =
   _aux "/" split;
   Unix.mkdir path 0o700;
   ()
+
 let get_user_home user =
   let user = getpwnam user in
   user.pw_dir
+
 let expand_path = Pcre.replace_first ~rex: (regexp "~/") ~templ: ((get_user_home (getenv "USER")) ^ "/")
