@@ -26,7 +26,7 @@ let inotify_event_thread rule path events =
 let thread_from_rule rule =
   match rule with
   | {Rule.path = Some path; watch = true} ->
-    inotify_event_thread rule path [S_Create]
+    inotify_event_thread rule path [S_Create; S_Moved_to]
   | {Rule.path = Some path; watch = false; poll = Some time} ->
     timer_thread rule time path
   | _ -> raise InvalidRule
@@ -45,6 +45,4 @@ let () =
     |> Lwt.pick
   )
   with InvalidKV (section, _) ->
-    print_endline ("Invalid section " ^ section)
-
-;;
+    print_endline ("Invalid section " ^ section);;
