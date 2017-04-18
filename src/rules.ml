@@ -52,25 +52,35 @@ let sweep_movement_action src_path dest_path selector =
                 |> Lwt_list.iter_p (file_move dest_path)
   | Result.Error path -> raise (InvalidPath path)
 
+(* Delete files in src_path matching selector. *)
+let delete_action src_path selector =
+  match Fs.list_all src_path with
+  | Ok files -> List.filter (fun f -> selector f != None) files
+                |> Lwt_list.iter_p Lwt_unix.unlink
+  | Result.Error path -> raise (InvalidPath path)
+
+
 module Rule = struct
   type t = {
     path : string option;
     selector : (string -> selector_result option);
     move_to : string option;
     watch : bool;
+    delete : bool;
     poll : int option;
   }
   let empty_rule = {
     path = None;
     selector = empty_selector;
     move_to = None;
+    delete = false;
     watch = false;
     poll = None
   }
   let rec rule_of_ini path base_rule = function
     | ("selector", Regexp rx)::xs ->  rule_of_ini path {base_rule with selector = (rx_selector rx)} xs
     | ("move_to", String folder)::xs -> rule_of_ini path {base_rule with move_to = Some folder} xs
-    (* | ("delete", Bool true)::xs -> rule_of_ini path {base_rule with action = delete_action} xs *)
+    | ("delete", Bool true)::xs -> rule_of_ini path {base_rule with delete = true} xs
     | ("watch", Bool true)::xs -> rule_of_ini path {base_rule with watch = true} xs
     | ("poll", Time poll)::xs -> rule_of_ini path {base_rule with poll = Some poll} xs
     | kv::xs -> Result.Error kv
@@ -79,5 +89,7 @@ module Rule = struct
   let execute_rule = function
     | {path = Some src_path; move_to = Some dest_path; selector = s} ->
       sweep_movement_action src_path dest_path s
+    | {path = Some src_path; delete = true; selector = s} ->
+      delete_action src_path s
     | _ -> raise InvalidRule
 end
