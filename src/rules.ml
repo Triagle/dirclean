@@ -84,7 +84,7 @@ module Rule = struct
     | ("watch", Bool true)::xs -> rule_of_ini path {base_rule with watch = true} xs
     | ("poll", Time poll)::xs -> rule_of_ini path {base_rule with poll = Some poll} xs
     | kv::xs -> Result.Error kv
-    | [] -> Result.Ok {base_rule with path = Some path}
+    | [] -> Result.Ok {base_rule with path = Some (Fs.expand_path path)}
 
   let execute_rule = function
     | {path = Some src_path; move_to = Some dest_path; selector = s} ->
