@@ -7,26 +7,28 @@ open Lwt;;
 open Lwt_inotify;;
 open Lwt_io;;
 open Lwt_main;;
-exception InvalidRule
 exception InvalidKV of string * Ini.value
-let rec timer_thread t fn path selector =
-  Lwt_unix.sleep (float_of_int t) >>= (fun () -> fn path selector; timer_thread t fn path selector)
-let inotify_event_thread path events fn selector =
+let rec timer_thread rule poll path =
+  Lwt_unix.sleep (float_of_int poll) >>= fun () ->
+  Rule.execute_rule rule >>= fun result ->
+  timer_thread rule poll path
+let inotify_event_thread rule path events =
   Lwt_inotify.create () >>= fun inotify ->
   add_watch inotify path events >>= fun watch ->
   let rec _event_loop inotify =
     Lwt_inotify.read inotify >>= fun ev ->
     match ev with
     | (_, _, _, Some p) ->
-      fn (Filename.concat path p) selector >>= fun _ -> _event_loop inotify
+      Rule.execute_rule rule >>= fun _ -> _event_loop inotify
     | _ -> Lwt.return (Success)  >>= fun _ -> _event_loop inotify in
   _event_loop inotify
 
-let thread_from_rule = function
-  | {Rule.path = path; selector = selector; action = action; watch = true} ->
-    inotify_event_thread path [S_Create] action selector
-  | {Rule.path = path; selector = selector; action = action; watch = false; poll = Some time} ->
-    timer_thread time action path selector
+let thread_from_rule rule =
+  match rule with
+  | {Rule.path = Some path; watch = true} ->
+    inotify_event_thread rule path [S_Create]
+  | {Rule.path = Some path; watch = false; poll = Some time} ->
+    timer_thread rule time path
   | _ -> raise InvalidRule
 
 let () =

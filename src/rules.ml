@@ -1,52 +1,83 @@
 (* Rules contain selectors and actions to carry out *)
+open Utils;;
 open Lwt;;
 open Pcre;;
 open Ini;;
 open Fs;;
+
+exception InvalidRule;;
+exception InvalidPath of string;;
+
 type action_result =
   | Success
   | Error
+
 type selector_result =
-  | Substr of string array
-  | Match of bool
-let empty_selector _ = Match false
-let empty_action _ _ = return Success
+  | Substr of string list
+  | Match
+
+(* Match everything *)
+let empty_selector _ = Some Match
+
+(* Create a selector that matches based on a regular expression *)
 let rx_selector rx p =
   try
-    Substr(Pcre.exec ~rex: rx p
-           |> Pcre.get_substrings)
+    Some (Substr(Pcre.exec ~rex: rx p
+                 |> Pcre.get_substrings
+                 |> Array.to_list
+                 |> List.tl))
   with Not_found ->
-    Match false
-let file_movement_action folder p s =
-  match s p with
-  | Substr groups -> Lwt_io.printl ("Moving " ^ p ^ " to " ^ folder) >>= fun () -> (return Success)
-  | Match true -> Lwt_io.printl ("Moving " ^ p ^ " to " ^ folder) >>= fun () -> (return Success)
-  | _ -> Lwt_io.printl ("Not performing any action on" ^ p) >>= fun () -> (return Success)
-let sweep_movement_action p s = Lwt_io.printl ("Sweeping " ^ folder) >>= fun () -> (return Success)
-let delete_action p s = return Success
+    None
+
+(* Construct a destination path relative to the src path, and incorporating the match results of selector_result. *)
+let construct_path src_path dest_path selector_result =
+  let src_dir = Filename.dirname src_path in
+  match selector_result with
+  | Substr arr -> Utils.fmt_list (Filename.concat src_dir dest_path) arr
+  | Match -> Filename.concat src_dir dest_path
+
+(* Move a matched file to the destination path. Creates directories to move to if need be.  *)
+let file_move dest_path (path, selector_result) =
+  let dest_path = construct_path path dest_path selector_result in
+  Fs.create_path dest_path;
+  Fs.move dest_path path
+
+(* Scan src_path, looking for files that match selector. These files are then moved to the dest_path. *)
+let sweep_movement_action src_path dest_path selector =
+  match Fs.list_all src_path with
+  | Ok files -> Utils.filter_map (fun f ->
+      match (selector (Filename.basename f)) with
+      | Some mtch -> Some (f, mtch)
+      | None -> None) files
+                |> Lwt_list.iter_p (file_move dest_path)
+  | Result.Error path -> raise (InvalidPath path)
 
 module Rule = struct
   type t = {
-    path : string ;
-    selector : (string -> selector_result);
-    action : (string -> (string -> selector_result) -> action_result Lwt.t);
+    path : string option;
+    selector : (string -> selector_result option);
+    move_to : string option;
     watch : bool;
     poll : int option;
   }
   let empty_rule = {
-    path = "";
+    path = None;
     selector = empty_selector;
-    action = empty_action;
+    move_to = None;
     watch = false;
     poll = None
   }
   let rec rule_of_ini path base_rule = function
     | ("selector", Regexp rx)::xs ->  rule_of_ini path {base_rule with selector = (rx_selector rx)} xs
-    | ("move_to", String folder)::xs -> rule_of_ini path {base_rule with action = sweep_movement_action} xs
-    | ("delete", Bool true)::xs -> rule_of_ini path {base_rule with action = delete_action} xs
-    | ("watch", Bool true)::xs -> rule_of_ini path {base_rule with watch = true;
-                                                                   action = (file_movement_action path)} xs
+    | ("move_to", String folder)::xs -> rule_of_ini path {base_rule with move_to = Some folder} xs
+    (* | ("delete", Bool true)::xs -> rule_of_ini path {base_rule with action = delete_action} xs *)
+    | ("watch", Bool true)::xs -> rule_of_ini path {base_rule with watch = true} xs
     | ("poll", Time poll)::xs -> rule_of_ini path {base_rule with poll = Some poll} xs
     | kv::xs -> Result.Error kv
-    | [] -> Result.Ok {base_rule with path = path}
+    | [] -> Result.Ok {base_rule with path = Some path}
+
+  let execute_rule = function
+    | {path = Some src_path; move_to = Some dest_path; selector = s} ->
+      sweep_movement_action src_path dest_path s
+    | _ -> raise InvalidRule
 end
