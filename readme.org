@@ -13,8 +13,8 @@ For instance:
 
 #+BEGIN_SRC conf
   [~/Downloads] # Section denotes this acts on all files in directory ~/Downloads
-  pattern = *\.zip # only select files matching pattern, see selectors supported
-  move_to = zip # Move to new folder, see actions supported
+  pattern = `*\.zip` # only select files matching pattern, see selectors supported
+  move_to = "zip" # Move to new folder, see actions supported
   watch = true # watch files in directory (via inotify).
 
   [~/Downloads] # Can have the same directory multiple times
@@ -25,12 +25,11 @@ For instance:
 #+END_SRC
 
 ** Actions
-| Action  | Description                                                               |
-|---------+---------------------------------------------------------------------------|
-| move_to | Move files to directory (create if needed), with pattern matching support |
-| delete  | Delete files                                                              |
-| rename  | Rename file, with pattern matching support                                |
-| exec    | Run command with file passed as argument                                  |
+| Action     | Description                                                               |
+|------------+---------------------------------------------------------------------------|
+| move_to    | Move files to directory (create if needed), with pattern matching support |
+| delete     | Delete files                                                              |
+| exec (NYI) | Run command with file passed as argument                                  |
 *** Pattern matching
 Pattern matching allows the use of regex to intelligently rename files. It
 utilizes regex capture groups to achieve this.
@@ -44,16 +43,16 @@ would be placed at =zip/hello/hello.zip=.
   # Example of pattern matching
   [~/Downloads]
   # Match mp3 files that follow the regex "{artist} - {title}.mp3"
-  pattern = (.+) - (.+)\.mp3$
-  move_to = ~/Music/{}/{}/
+  pattern = `(.+) - (.+)\.mp3$`
+  move_to = "~/Music/{}/{}/"
   watch = true
 #+END_SRC
 
 ** Selector
-| Selector | Description                |
-|----------+----------------------------|
-| pattern  | Match files based on regex |
-| age      | Match files based on age   |
+| Selector  | Description                |
+|-----------+----------------------------|
+| pattern   | Match files based on regex |
+| age (NYI) | Match files based on age   |
 * Usage
 Simply run =dirclean= to start the daemon, it'll silently work in the background
 to clean the directories as specified by your configuration.
