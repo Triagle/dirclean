@@ -25,11 +25,11 @@ For instance:
 #+END_SRC
 
 ** Actions
-| Action     | Description                                                               |
-|------------+---------------------------------------------------------------------------|
-| move_to    | Move files to directory (create if needed), with pattern matching support |
-| delete     | Delete files                                                              |
-| exec (NYI) | Run command with file passed as argument                                  |
+| Action  | Description                                                               |
+|---------+---------------------------------------------------------------------------|
+| move_to | Move files to directory (create if needed), with pattern matching support |
+| delete  | Delete files                                                              |
+| exec    | Run command with file passed as argument                                  |
 *** Pattern matching
 Pattern matching allows the use of regex to intelligently rename files. It
 utilizes regex capture groups to achieve this.
