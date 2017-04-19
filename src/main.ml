@@ -32,9 +32,9 @@ let thread_from_rule rule =
     timer_thread rule time path
   | _ -> raise InvalidRule
 
-let () =
+let execute_from conf_file =
   try
-    let ini = Ini.parse_ini_file "./conf.ini" in
+    let ini = Ini.parse_ini_file conf_file in
     let rules = List.map (fun (path, values) ->
         match Rule.rule_of_ini path Rule.empty_rule values with
         | Ok rule -> rule
@@ -47,3 +47,10 @@ let () =
   )
   with InvalidKV (section, _) ->
     print_endline ("Invalid section " ^ section)
+
+let () =
+  let args = Sys.argv in
+  if Array.length args < 2 then
+    print_endline "Usage: dirclean <configuration-file>"
+  else
+    execute_from args.(1)
