@@ -1,7 +1,7 @@
 (* Filesystem helper functions *)
-open Unix;;
-open Pcre;;
-open Inotify;;
+open Unix
+open Pcre
+open Inotify
 exception InvalidPath of string
 (* List all files in a directory *)
 let list_all = function

@@ -1,6 +1,6 @@
 (* Utility functions *)
-open Pcre;;
-open Printf;;
+open Pcre
+open Printf
 
 let filter_map f l =
   List.fold_right (fun i acc ->

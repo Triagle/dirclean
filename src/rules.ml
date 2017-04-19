@@ -1,9 +1,9 @@
 (* Rules contain selectors and actions to carry out *)
-open Utils;;
-open Lwt;;
-open Pcre;;
-open Ini;;
-open Fs;;
+open Utils
+open Lwt
+open Pcre
+open Ini
+open Fs
 
 exception InvalidRule;;
 exception InvalidPath of string;;

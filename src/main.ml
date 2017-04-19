@@ -1,12 +1,13 @@
-open Pcre;;
-open Fs;;
-open Rules;;
-open Ini;;
-open Inotify;;
-open Lwt;;
-open Lwt_inotify;;
-open Lwt_io;;
-open Lwt_main;;
+open Pcre
+open Fs
+open Rules
+open Ini
+open Inotify
+open Lwt
+open Lwt_inotify
+open Lwt_daemon
+open Lwt_io
+open Lwt_main
 exception InvalidKV of string * Ini.value
 let rec timer_thread rule poll path =
   Lwt_unix.sleep (float_of_int poll) >>= fun () ->
@@ -45,4 +46,4 @@ let () =
     |> Lwt.pick
   )
   with InvalidKV (section, _) ->
-    print_endline ("Invalid section " ^ section);;
+    print_endline ("Invalid section " ^ section)

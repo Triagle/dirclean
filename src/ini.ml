@@ -1,5 +1,5 @@
-open Pcre;;
-open Angstrom;;
+open Pcre
+open Angstrom
 
 let section_name = take_while1 (fun x -> x != ']')
 
