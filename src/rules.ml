@@ -29,6 +29,10 @@ let rx_selector rx p =
   with Not_found ->
     None
 
+let age_selector age = function
+  | p when (Fs.age_of p) > age && not (Sys.is_directory p) -> Some Match
+  | _ -> None
+
 (* Construct a destination path relative to the src path, and incorporating the match results of selector_result. *)
 let construct_path src_path dest_path selector_result =
   let src_dir = Filename.dirname src_path in
@@ -87,6 +91,7 @@ module Rule = struct
   }
   let rec rule_of_ini path base_rule = function
     | ("selector", Regexp rx)::xs ->  rule_of_ini path {base_rule with selector = (rx_selector rx)} xs
+    | ("selector", Time t)::xs -> rule_of_ini path {base_rule with selector = (age_selector t)} xs
     | ("move_to", String folder)::xs -> rule_of_ini path {base_rule with move_to = Some folder} xs
     | ("delete", Bool true)::xs -> rule_of_ini path {base_rule with delete = true} xs
     | ("watch", Bool true)::xs -> rule_of_ini path {base_rule with watch = true} xs

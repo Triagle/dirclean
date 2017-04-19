@@ -19,9 +19,10 @@ let fs_glob path f =
   | Ok files -> Ok (List.filter f files)
   | Error e -> Error e (* Quirk of the ocaml type system. *)
 
-(* Get age of file *)
+(* Get age of file, measured in seconds *)
 let age_of file =
-  (Unix.stat file).st_mtime
+  Unix.time() -. (Unix.stat file).st_mtime
+  |> int_of_float
 
 (* Move src_path into dest_folder (a folder) *)
 let move dest_folder src_path =
