@@ -38,7 +38,8 @@ let create_path path =
     | (path, x::xs) when Sys.is_directory path -> _aux (Filename.concat path x) xs
     | (_, _) -> raise (InvalidPath path) in
   _aux "/" split;
-  Unix.mkdir path 0o700;
+  if not (Sys.file_exists path) then
+    Unix.mkdir path 0o700;
   ()
 
 let get_user_home user =
