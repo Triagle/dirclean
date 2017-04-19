@@ -49,10 +49,10 @@ would be placed at =zip/hello/hello.zip=.
 #+END_SRC
 
 ** Selector
-| Selector  | Description                |
-|-----------+----------------------------|
-| pattern   | Match files based on regex |
-| age (NYI) | Match files based on age   |
+| Selector | Description                |
+|----------+----------------------------|
+| pattern  | Match files based on regex |
+| age      | Match files based on age   |
 * Usage
 Simply run =dirclean= to start the daemon, it'll silently work in the background
 to clean the directories as specified by your configuration.
