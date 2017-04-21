@@ -17,6 +17,16 @@ type value =
   | Regexp of Pcre.regexp
   | Selector of Selector.selector
 
+
+let rec string_of_value = function
+  | Int i  -> string_of_int i
+  | String s -> s
+  | Array lst -> String.concat ", " (List.map string_of_value lst)
+  | Bool b -> string_of_bool b
+  | Regexp rx -> "<regex>"
+  | Time t -> "<time>"
+  | Selector s -> "<selector>"
+
 let bool_value =
   ((string "true") *> (return (Bool true))) <|> ((string "false") *> (return (Bool false)))
 
