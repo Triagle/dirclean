@@ -24,6 +24,8 @@ let str_value = take_while (fun x -> x != '"') >>| (fun s -> String s)
 
 let string_value = char '"' *> str_value <* char '"'
 
+let comment = char '#' *> take_till (fun x -> x == '\n')
+
 let digit = function
   | '0' ..  '9' -> true
   | _ -> false
@@ -48,10 +50,13 @@ let num_value = lift2 (fun negate digit ->
     Int (negate 0 digit)) negate integer
 
 let empty_space =
-  many (choice [char ' '; char '\n'; char '\t'])
+  take_till (fun x -> x != '\n' && x != '\t' && x != ' ')
+
+let ignorable =
+  many (choice [empty_space; comment])
 
 let whitespace p =
-  empty_space *> p <* empty_space
+  ignorable *> p <* ignorable
 
 let array_of p = char '[' *> sep_by (whitespace (char ',')) p <* char ']'
                    >>| (fun l -> Array l)
@@ -65,9 +70,9 @@ let key = take_while1 (fun x -> x != ' ' && x != '=' && x != '[' && x != ']' )
 let kv_pair = lift2 (fun key value -> (key, value)) (key <* (whitespace (char '='))) value
 
 let document =
-  sep_by empty_space (lift2 (fun section kv_pairs ->
+  sep_by ignorable (lift2 (fun section kv_pairs ->
       (section,
-        kv_pairs)) (section <* empty_space) (sep_by empty_space kv_pair))
+        kv_pairs)) (section <* ignorable) (sep_by ignorable kv_pair))
 
 let parse_ini string =
   match parse_only document (`String string) with
