@@ -1,5 +1,6 @@
 open Pcre
 open Angstrom
+open Selector
 
 let section_name = take_while1 (fun x -> x != ']')
 
@@ -14,9 +15,7 @@ type value =
   | Bool of bool
   | Time of int
   | Regexp of Pcre.regexp
-
-let regexp_literal = take_till (fun x -> x == '`') >>| (fun r -> Regexp (regexp r))
-let regexp_value = char '`' *> regexp_literal <* char '`'
+  | Selector of Selector.selector
 
 let bool_value =
   ((string "true") *> (return (Bool true))) <|> ((string "false") *> (return (Bool false)))
@@ -56,10 +55,10 @@ let whitespace p =
 
 let array_of p = char '[' *> sep_by (whitespace (char ',')) p <* char ']'
                    >>| (fun l -> Array l)
-
+let selector_value = Selector.expr >>| (fun s -> Selector s)
 let value = fix (fun value ->
     let arr = array_of value in
-    choice [string_value; time_value; num_value; regexp_value; bool_value;  arr])
+    choice [selector_value; string_value; time_value; num_value; bool_value; arr])
 
 let key = take_while1 (fun x -> x != ' ' && x != '=' && x != '[' && x != ']' )
 

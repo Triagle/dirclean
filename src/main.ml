@@ -21,7 +21,7 @@ let inotify_event_thread rule path events =
     match ev with
     | (_, _, _, Some p) ->
       Rule.execute_rule rule >>= fun _ -> _event_loop inotify
-    | _ -> Lwt.return (Success)  >>= fun _ -> _event_loop inotify in
+    | _ -> _event_loop inotify in
   _event_loop inotify
 
 let thread_from_rule rule =
@@ -30,7 +30,7 @@ let thread_from_rule rule =
     inotify_event_thread rule path [S_Create; S_Moved_to]
   | {Rule.path = Some path; watch = false; poll = Some time} ->
     timer_thread rule time path
-  | _ -> raise InvalidRule
+  | _ -> raise (Rule.InvalidRule rule)
 
 let execute_from conf_file =
   try
