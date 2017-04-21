@@ -1,4 +1,5 @@
 open Pcre
+open Printf
 open Fs
 open Rules
 open Ini
@@ -32,21 +33,38 @@ let thread_from_rule rule =
     timer_thread rule time path
   | _ -> raise (Rule.InvalidRule rule)
 
+let some_or opt default =
+  match opt with
+  | Some x -> x
+  | None -> default
+
 let execute_from conf_file =
   try
     let ini = Ini.parse_ini_file conf_file in
     let rules = List.map (fun (path, values) ->
-        match Rule.rule_of_ini path Rule.empty_rule values with
+        match Rule.rule_of_ini (Fs.expand_path path) Rule.empty_rule values with
         | Ok rule -> rule
         | Result.Error (s, v) -> raise (InvalidKV (s, v))
       ) ini in
-  Lwt_main.run (
-    rules
-    |> List.map thread_from_rule
-    |> Lwt.pick
-  )
-  with InvalidKV (section, _) ->
-    print_endline ("Invalid section " ^ section)
+    Lwt_main.run (
+      rules
+      |> List.map thread_from_rule
+      |> Lwt.pick
+    )
+  with
+  | InvalidKV (key, value) ->
+    Printf.printf "An error occurred whilst parsing rules from %s\n" conf_file;
+    print_endline "---";
+    Printf.printf "Invalid key value pair:\n";
+    Printf.printf "%s = %s\n" key (string_of_value value);
+  | Rule.InvalidRule rule ->
+    Printf.printf "An error occurred whilst executing rules from %s\n" conf_file;
+    print_endline "---";
+    Printf.printf "Rule [%s]:\n" (some_or rule.Rule.path "Path missing");
+    match Rule.diagnose_rule rule with
+    | Some error -> print_endline error; ()
+    | None -> ()
+
 
 let () =
   let args = Sys.argv in
